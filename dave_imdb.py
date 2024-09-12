@@ -74,7 +74,7 @@ def get_actor_movies(nconst, conn):
     """
     return pd.read_sql_query(query, conn, params=[nconst])
 
-def bacon_algorithm(nconst_targ, nconst_src, conn)
+def bacon_algorithm(nconst_targ, nconst_src, conn):
     path_list = [] # a list of lists of nconsts
     curr_list = []   
     checked_list = []
@@ -93,48 +93,46 @@ def bacon_algorithm(nconst_targ, nconst_src, conn)
         
         return path_list[idx]    
    
-    checked_list.append(curr_list)
+    checked_list.extend(curr_list)
+
+    costars_investigated = 0
 
    # no free lunch, we have to do some work
     while (not_found):
         depth += 1
+        print ("Depth: ", depth)
         next_list = []
         next_path_list = []
+        print("Number of actors for next iteration: ", len(curr_list))
         for idx, n in enumerate(curr_list):
+            costars_investigated += 1
+            print ("Costars Investigated: ", costars_investigated)
             temp = get_costars_and_frequencies(n, conn)
             temp = temp["nconst"].tolist()
-            next_list = next_list + temp
+            #print("Number of actors for next iteration: ", len(temp))
+            # go through temp and pop any elements that are in checked_list, curr_list, or next_list
+            temp_filtered = [x for x in temp if x not in checked_list]
+            next_list.extend(temp_filtered)
+            checked_list.extend(temp_filtered)
+            #print(temp_filtered)
+            print("Number of actors for next iteration: ", len(next_list))
             temp_path_list = []
-            temp_path_list = [temp_path_list.append([path_list[idx], x]) for x in temp]
-            next_path_list = next_path_list + temp_path_list
+            temp_path_list = [([path_list[idx] + [x]]) for x in temp_filtered]
+            next_path_list.extend(temp_path_list)
+            # check if nconst_target is in next_list
+            if nconst_targ in temp_filtered:
+                not_found = False
+                break
 
-        curr_list = next_list
-        path_list = next_path_list
+        curr_list = next_list.copy()
+        path_list = next_path_list.copy()
 
         # find elements of curr_list that are in checked_list
         # remove them from curr_list
         # remove the corresponding elements from path_list
-        for idx, n in enumerate(curr_list):
-            if n in checked_list:
-                curr_list.pop(idx)
-                path_list.pop(idx)
-
-        if nconst_targ in curr_list:
-            not_found = False
         if depth > 6:
             not_found = False
 
+        
+
     return path_list[curr_list.index(nconst_targ)]
-
-
-
-             
-
-    # if nconst_targ is in A, return a bunch of stuff
-    # if not, add A to the "already checked" list. 
-    # for everyone in A, get their costars, append to new list B
-    # set A=B, increment depth counter, repeat until nconst_targ is found or depth counter exceeds 6
-
-
-
-
