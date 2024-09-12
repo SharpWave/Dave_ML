@@ -12,7 +12,7 @@ def search_name_basics(name, conn):
     return pd.read_sql_query("SELECT * FROM name_basics WHERE primaryname ILIKE '%{}%';".format(name), conn)
 
 def get_nconst(nametable, row_idx):
-    return nametable.iloc[row_idx]["nconst"]    
+    return nametable.iloc[row_idx]["nconst"]   
 
 # %%
 def get_costars_and_frequencies(nconst, conn):
@@ -59,43 +59,80 @@ def get_costars_and_frequencies(nconst, conn):
     star_names_df = star_names_df.sort_values(by="Count", ascending=False).reset_index(drop=True)
 
     return star_names_df
-
-
-
 # %%
 # for the nconst of the actor, list all the movies they have acted in, and the average rating of those movies, the year the movie was released, the runtime of the movie, the genres of the movie, and the number of votes the movie has received
-query = """
-    SELECT tp.tconst, tb.primarytitle, tr.averagerating, tb.startyear, tb.runtimeminutes, tb.genres, tr.numvotes
-    FROM title_principals tp
-    JOIN title_basics tb ON tp.tconst = tb.tconst
-    LEFT JOIN title_ratings tr ON tp.tconst = tr.tconst
-    WHERE tp.nconst = %s
-      AND (tp.category = 'actor' OR tp.category = 'actress')
-      AND tb.titletype = 'movie'
-      ORDER BY tr.averagerating DESC
-"""
-actor_movies = pd.read_sql_query(query, conn, params=[nconst])
-actor_movies.head(actor_movies.shape[0])
+def get_actor_movies(nconst, conn):
+    query = """
+        SELECT tp.tconst, tb.primarytitle, tr.averagerating, tb.startyear, tb.runtimeminutes, tb.genres, tr.numvotes
+        FROM title_principals tp
+        JOIN title_basics tb ON tp.tconst = tb.tconst
+        LEFT JOIN title_ratings tr ON tp.tconst = tr.tconst
+        WHERE tp.nconst = %s
+          AND (tp.category = 'actor' OR tp.category = 'actress')
+          AND tb.titletype = 'movie'
+          ORDER BY tr.averagerating DESC
+    """
+    return pd.read_sql_query(query, conn, params=[nconst])
 
-# %%
-# plot year on x and averagerating on y
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set()
-plt.figure(figsize=(12, 8))
-plt.scatter(actor_movies["startyear"], actor_movies["averagerating"])
-plt.xlabel("Year")
-plt.ylabel("Average Rating")
-plt.ylim(0, 10)
-plt.title("Average Rating of Movies Over Time")
-plt.show()
+def bacon_algorithm(nconst_targ, nconst_src, conn)
+    path_list = [] # a list of lists of nconsts
+    curr_list = []   
+    checked_list = []
+    depth = 0
+    not_found = True
+    # first, get costars of nconst_src and check if nconst_targ is in the list, curr_list
+    curr_list = get_costars_and_frequencies(nconst_src, conn)
+    curr_list = curr_list["nconst"].tolist()
+    # make path list a list of lists corresponding to curr_list, each element is just the element of curr_list but inside a list
+    path_list = [[x] for x in curr_list]
+    
+    if nconst_targ in curr_list:
+        # add a bunch of stuff to a data structure, we'll do this later
+        # idx is the index of nconst_targ in curr_list
+        idx = curr_list.index(nconst_targ)
+        data_out = []
+        return data_out    
+   
+    checked_list.append(curr_list)
+
+   # no free lunch, we have to do some work
+    while (not_found):
+        depth += 1
+        next_list = []
+        next_path_list = []
+        for idx, n in enumerate(curr_list):
+            temp = get_costars_and_frequencies(n, conn)
+            temp = temp["nconst"].tolist()
+            next_list = next_list + temp
+            temp_path_list = []
+            temp_path_list = [temp_path_list.append([path_list[idx], x]) for x in temp]
+            next_path_list = next_path_list + temp_path_list
+
+        curr_list = next_list
+        path_list = next_path_list
+
+        # find elements of curr_list that are in checked_list
+        # remove them from curr_list
+        # remove the corresponding elements from path_list
+        for idx, n in enumerate(curr_list):
+            if n in checked_list:
+                curr_list.pop(idx)
+                path_list.pop(idx)
+                
+        if nconst_targ in curr_list:
+            not_found = False
+        if depth > 6:
+            not_found = False
 
 
-# %%
-# show the rows of tc_costars dataframe where primaryname column is Timothy Olyphant
-to = tc_costars[tc_costars["primaryname"] == "Frank Vincent"]
-#to = to.merge(pd.read_sql_query("SELECT * FROM title_basics;", conn), on="tconst")
-to.head(to.shape[0])
+
+             
+
+    # if nconst_targ is in A, return a bunch of stuff
+    # if not, add A to the "already checked" list. 
+    # for everyone in A, get their costars, append to new list B
+    # set A=B, increment depth counter, repeat until nconst_targ is found or depth counter exceeds 6
+
 
 
 
