@@ -90,8 +90,8 @@ def bacon_algorithm(nconst_targ, nconst_src, conn)
         # add a bunch of stuff to a data structure, we'll do this later
         # idx is the index of nconst_targ in curr_list
         idx = curr_list.index(nconst_targ)
-        data_out = []
-        return data_out    
+        
+        return path_list[idx]    
    
     checked_list.append(curr_list)
 
@@ -118,11 +118,13 @@ def bacon_algorithm(nconst_targ, nconst_src, conn)
             if n in checked_list:
                 curr_list.pop(idx)
                 path_list.pop(idx)
-                
+
         if nconst_targ in curr_list:
             not_found = False
         if depth > 6:
             not_found = False
+
+    return path_list[curr_list.index(nconst_targ)]
 
 
 
