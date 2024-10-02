@@ -136,3 +136,28 @@ def bacon_algorithm(nconst_targ, nconst_src, conn):
         
 
     return path_list[curr_list.index(nconst_targ)]
+
+def fast_bacon_algorithm(nconst_targ, nconst_src, conn):
+    from collections import deque
+
+    if nconst_src == nconst_targ:
+        return [nconst_src]
+
+    queue = deque()
+    queue.append((nconst_src, [nconst_src]))
+    checked_set = set()
+    checked_set.add(nconst_src)
+
+    while queue:
+        n, path = queue.popleft()
+        temp = get_costars_and_frequencies(n, conn)
+        temp_list = temp["nconst"].tolist()
+
+        for costar in temp_list:
+            if costar == nconst_targ:
+                return path + [costar]
+            if costar not in checked_set:
+                checked_set.add(costar)
+                queue.append((costar, path + [costar]))
+
+    return None  # Return None if no path is found
